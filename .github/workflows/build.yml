@@ -1,0 +1,131 @@
+name: Build Kernel (SDM845) - maxcer_zzy
+
+on:
+  push:
+    branches: [ lineage-22.2 ]
+  workflow_dispatch:
+    inputs:
+      defconfig:
+        description: 'Defconfig name'
+        required: false
+        default: 'lineageos_judypn_defconfig'
+
+env:
+  ARCH: arm64
+  SUBARCH: arm64
+  CROSS_COMPILE: aarch64-linux-gnu-
+  DEFCONFIG: ${{ github.event.inputs.defconfig || 'lineageos_judypn_defconfig' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            gcc-aarch64-linux-gnu \
+            binutils-aarch64-linux-gnu \
+            bison \
+            flex \
+            libssl-dev \
+            libelf-dev \
+            bc \
+            cpio \
+            zip \
+            unzip \
+            lz4 \
+            xz-utils \
+            zlib1g-dev \
+            device-tree-compiler \
+            libncurses-dev \
+            python3 \
+            git
+
+      - name: Verify toolchain
+        run: |
+          ${{ env.CROSS_COMPILE }}gcc --version
+          echo "ARCH=$ARCH"
+          echo "DEFCONFIG=${{ env.DEFCONFIG }}"
+
+      - name: Clean tree
+        run: make ARCH=$ARCH mrproper || true
+
+      - name: Generate defconfig
+        run: make ARCH=$ARCH ${{ env.DEFCONFIG }}
+
+      - name: Build kernel
+        run: |
+          make ARCH=$ARCH \
+               CROSS_COMPILE=$CROSS_COMPILE \
+               -j$(nproc) \
+               2>&1 | tee build.log
+
+      - name: Check build output
+        run: |
+          ls -la arch/$ARCH/boot/
+          echo "---"
+          file arch/$ARCH/boot/Image* 2>/dev/null || echo "No Image found"
+
+      - name: Package kernel
+        id: package
+        run: |
+          OUT_DIR=output
+          mkdir -p $OUT_DIR
+
+          # Copy Image
+          if [ -f arch/$ARCH/boot/Image.gz-dtb ]; then
+            cp arch/$ARCH/boot/Image.gz-dtb $OUT_DIR/
+            echo "IMAGE=Image.gz-dtb" >> $GITHUB_OUTPUT
+          elif [ -f arch/$ARCH/boot/Image.gz ]; then
+            cp arch/$ARCH/boot/Image.gz $OUT_DIR/
+            echo "IMAGE=Image.gz" >> $GITHUB_OUTPUT
+          elif [ -f arch/$ARCH/boot/Image ]; then
+            gzip -9 -c arch/$ARCH/boot/Image > $OUT_DIR/Image.gz
+            echo "IMAGE=Image.gz" >> $GITHUB_OUTPUT
+          else
+            echo "ERROR: No kernel image found!"
+            exit 1
+          fi
+
+          # Copy dtbo if exists
+          cp arch/$ARCH/boot/dtbo.img $OUT_DIR/ 2>/dev/null || true
+
+          # Copy any defconfig for reference
+          cp arch/$ARCH/configs/${{ env.DEFCONFIG }} $OUT_DIR/ 2>/dev/null || true
+
+          # Get kernel version
+          KVER=$(cat Makefile | head -5 | grep VERSION | cut -d' ' -f3)
+          KPATCH=$(cat Makefile | head -5 | grep PATCHLEVEL | cut -d' ' -f3)
+          KSUB=$(cat Makefile | head -5 | grep SUBLEVEL | cut -d' ' -f3)
+          echo "KERNEL_VERSION=${KVER}.${KPATCH}.${KSUB}" >> $GITHUB_OUTPUT
+
+          # Create zip
+          cd $OUT_DIR
+          zip -r ../MaxcerZzy-SDM845-${KVER}.${KPATCH}.${KSUB}.zip .
+          cd ..
+
+          echo "Build artifacts:"
+          ls -lh *.zip
+
+      - name: Upload kernel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MaxcerZzy-SDM845-${{ steps.package.outputs.KERNEL_VERSION }}
+          path: "*.zip"
+          retention-days: 14
+
+      - name: Release (auto on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "MaxcerZzy-SDM845-*.zip"
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,30 @@
+# Build output
+out/
+*.o
+*.o.cmd
+*.ko
+*.mod
+*.mod.c
+*.order
+*.symvers
+
+# Image files
+arch/arm64/boot/Image
+arch/arm64/boot/Image.gz
+arch/arm64/boot/Image.gz-dtb
+arch/arm64/boot/dtbo.img
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Compiled binaries
+*.bin
+*.elf
