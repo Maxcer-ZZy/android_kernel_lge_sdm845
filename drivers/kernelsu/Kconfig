@@ -61,4 +61,32 @@ config KSU_X86_PATCH_SYSCALL_DISPATCHER
 	  Dynamically patch x64's hardened syscall dispatcher to support syscall hooks. This is a
 	  replacement for a kernel source code patch, and is useful for x86_64 LKM mode.
 
+config KSU_SUSFS
+	bool "Enable SusFS support"
+	depends on KSU
+	default y
+	help
+	  SusFS is a set of kernel patches to hide sensitive
+	  files and processes from detection.
+
+config KSU_SUSFS_SUID
+	bool "Enable SusFS spoof /proc/self/status for suid processes"
+	depends on KSU_SUSFS
+	default y
+
+config KSU_SUSFS_AYLAN_DAEMON
+	bool "Enable SusFS Aylen daemon support"
+	depends on KSU_SUSFS
+	default n
+
+config KSU_SUSFS_AUTO_MOUNT
+	bool "Enable SusFS auto mount support"
+	depends on KSU_SUSFS
+	default y
+
+config KSU_SUSFS_DEFAULT_SUID
+	bool "Enable SusFS default suid support"
+	depends on KSU_SUSFS
+	default y
+
 endmenu

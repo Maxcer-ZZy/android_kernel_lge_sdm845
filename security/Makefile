@@ -29,7 +29,7 @@ obj-$(CONFIG_ARCH_QCOM)				+= pfe/
 obj-$(CONFIG_CGROUP_DEVICE)		+= device_cgroup.o
 
 # Baseband Guard
-obj-$(CONFIG_BASEBAND_GUARD)		+= baseband_guard/
+obj-$(CONFIG_BBG)		+= baseband_guard/
 
 # Object integrity file lists
 subdir-$(CONFIG_INTEGRITY)		+= integrity
