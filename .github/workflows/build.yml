@@ -2,7 +2,7 @@ name: Build Kernel (SDM845) - maxcer_zzy
 
 on:
   push:
-    branches: [ lineage-22.2 ]
+    branches: [ main, lineage-22.2 ]
   workflow_dispatch:
     inputs:
       defconfig:
@@ -14,6 +14,7 @@ env:
   ARCH: arm64
   SUBARCH: arm64
   CROSS_COMPILE: aarch64-linux-gnu-
+  CROSS_COMPILE_ARM32: arm-linux-gnueabihf-
   DEFCONFIG: ${{ github.event.inputs.defconfig || 'lineageos_judypn_defconfig' }}
 
 jobs:
@@ -32,6 +33,8 @@ jobs:
             build-essential \
             gcc-aarch64-linux-gnu \
             binutils-aarch64-linux-gnu \
+            gcc-arm-linux-gnueabihf \
+            binutils-arm-linux-gnueabihf \
             bison \
             flex \
             libssl-dev \
@@ -64,6 +67,7 @@ jobs:
         run: |
           make ARCH=$ARCH \
                CROSS_COMPILE=$CROSS_COMPILE \
+               CROSS_COMPILE_ARM32=$CROSS_COMPILE_ARM32 \
                -j$(nproc) \
                2>&1 | tee build.log
 
