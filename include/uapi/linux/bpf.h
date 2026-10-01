@@ -354,84 +354,71 @@ union bpf_attr {
 		__aligned_u64	btf_log_buf;
 	};
 
-	struct { /* anonymous struct used by BPF_OBJ_GET_INFO_BY_FD */
+	struct { /* struct used by BPF_OBJ_GET_INFO_BY_FD */
 		__u32		bpf_fd;
 		__u32		info_len;
 		__aligned_u64	info;
-	};
+	} info;
 
-	struct { /* anonymous struct used by BPF_PROG_TEST_RUN command */
+	struct { /* struct used by BPF_PROG_TEST_RUN command */
 		__u32		prog_fd;
 		__u32		retval;
 		__u32		data_size;
 		__aligned_u64	data;
 		__u32		connect_flags;
-	};
+	} test;
 
-	struct { /* anonymous struct used by BPF_PROG_GET_NEXT_ID */
-		__u32		start_id;
+	struct { /* anonymous struct used by BPF_*_GET_NEXT_ID and
+		 * BPF_*_GET_FD_BY_ID commands
+		 */
+		union {
+			__u32	start_id;
+			__u32	prog_id;
+			__u32	map_id;
+			__u32	btf_id;
+			__u32	link_id;
+		};
 		__u32		next_id;
 		__u32		open_flags;
 	};
 
-	struct { /* anonymous struct used by BPF_MAP_GET_NEXT_ID */
-		__u32		start_id;
-		__u32		next_id;
-	};
-
-	struct { /* anonymous struct used by BPF_RAW_TRACEPOINT_OPEN */
+	struct { /* struct used by BPF_RAW_TRACEPOINT_OPEN command */
 		__u32		prog_fd;
 		char		name[16];
-	};
+	} raw_tracepoint;
 
-	struct { /* anonymous struct used by BPF_BTF_GET_NEXT_ID */
-		__u32		start_id;
-		__u32		next_id;
-	};
-
-	struct { /* anonymous struct used by BPF_LINK_CREATE */
+	struct { /* struct used by BPF_LINK_CREATE command */
 		__u32		prog_fd;
 		__u32		target_fd;
 		__u32		attach_type;
 		__u32		flags;
-	};
+	} link_create;
 
-	struct { /* anonymous struct used by BPF_LINK_UPDATE */
+	struct { /* struct used by BPF_LINK_UPDATE command */
 		__u32		link_fd;
 		__u32		new_prog_fd;
 		__u32		flags;
 		__u32		old_prog_fd;
-	};
+	} link_update;
 
-	struct { /* anonymous struct used by BPF_LINK_GET_FD_BY_ID */
-		__u32		id;
-		__u32		open_flags;
-	};
-
-	struct { /* anonymous struct used by BPF_LINK_GET_NEXT_ID */
-		__u32		start_id;
-		__u32		next_id;
-		__u32		open_flags;
-	};
-
-	struct { /* anonymous struct used by BPF_ENABLE_STATS */
+	struct { /* struct used by BPF_ENABLE_STATS command */
 		__u32		type;
-	};
+	} enable_stats;
 
-	struct { /* anonymous struct used by BPF_ITER_CREATE */
+	struct { /* struct used by BPF_ITER_CREATE command */
 		__u32		link_fd;
 		__u32		flags;
-	};
+	} iter_create;
 
-	struct { /* anonymous struct used by BPF_LINK_DETACH */
+	struct { /* struct used by BPF_LINK_DETACH command */
 		__u32		link_fd;
-	};
+	} link_detach;
 
-	struct { /* anonymous struct used by BPF_PROG_BIND_MAP */
+	struct { /* struct used by BPF_PROG_BIND_MAP command */
 		__u32		prog_fd;
 		__u32		map_fd;
 		__u32		flags;
-	};
+	} prog_bind_map;
 } __attribute__((aligned(8)));
 
 /* integer value in 'imm' field of BPF_CALL instruction selects which helper
@@ -779,10 +766,6 @@ enum bpf_func_id {
 	BPF_FUNC_get_socket_uid,
 
 	BPF_FUNC_get_current_cgroup_id,
-	BPF_FUNC_skb_vlan_push,
-	BPF_FUNC_skb_vlan_pop,
-	BPF_FUNC_skb_get_tunnel_key,
-	BPF_FUNC_skb_set_tunnel_key,
 	BPF_FUNC_perf_event_read_value,
 	BPF_FUNC_perf_prog_read_value,
 	BPF_FUNC_getsockopt,

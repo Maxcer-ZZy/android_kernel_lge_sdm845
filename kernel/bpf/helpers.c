@@ -17,6 +17,11 @@
 #include <linux/sched.h>
 #include <linux/uidgid.h>
 #include <linux/filter.h>
+#include <linux/timekeeping.h>
+
+struct bpf_sock_ops_kern;
+struct sk_msg_buff;
+struct bpf_spin_lock;
 
 /* If kernel subsystem is allowing eBPF programs to call this function,
  * inside its own verifier_ops->get_func_proto() callback it should return
@@ -295,17 +300,6 @@ const struct bpf_func_proto bpf_spin_unlock_proto = {
 	.gpl_only	= false,
 	.ret_type	= RET_INTEGER,
 	.arg1_type	= ARG_PTR_TO_MAP_VALUE,
-};
-
-BPF_CALL_1(bpf_get_current_task, u64, flags)
-{
-	return (u64)(unsigned long)current;
-}
-
-const struct bpf_func_proto bpf_get_current_task_proto = {
-	.func		= bpf_get_current_task,
-	.gpl_only	= true,
-	.ret_type	= RET_INTEGER,
 };
 
 BPF_CALL_0(bpf_ktime_get_boot_ns)

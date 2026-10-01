@@ -14,6 +14,9 @@
 #include <linux/err.h>
 #include <linux/list.h>
 #include <linux/spinlock.h>
+#include <linux/wait.h>
+#include <linux/mutex.h>
+#include <linux/atomic.h>
 
 struct perf_event;
 struct bpf_map;
@@ -68,6 +71,7 @@ struct bpf_map {
 	struct mutex freeze_mutex;
 	raw_spinlock_t lock;
 	u32 *owner_refcnt;
+	void *map_priv;
 #ifdef CONFIG_SECURITY
 	void *security;
 #endif
@@ -509,8 +513,6 @@ struct bpf_lru {
 
 /* verifier prototypes for new helper functions */
 extern const struct bpf_func_proto bpf_get_current_cgroup_id_proto;
-extern const struct bpf_func_proto bpf_get_socket_cookie_proto;
-extern const struct bpf_func_proto bpf_get_socket_uid_proto;
 extern const struct bpf_func_proto bpf_getsockopt_proto;
 extern const struct bpf_func_proto bpf_setsockopt_proto;
 extern const struct bpf_func_proto bpf_sk_redirect_map_proto;
@@ -523,7 +525,6 @@ extern const struct bpf_func_proto bpf_ringbuf_reserve_proto;
 extern const struct bpf_func_proto bpf_ringbuf_submit_proto;
 extern const struct bpf_func_proto bpf_ringbuf_discard_proto;
 extern const struct bpf_func_proto bpf_ringbuf_query_proto;
-extern const struct bpf_func_proto bpf_get_current_task_proto;
 extern const struct bpf_func_proto bpf_ktime_get_boot_ns_proto;
 extern const struct bpf_func_proto bpf_send_signal_proto;
 

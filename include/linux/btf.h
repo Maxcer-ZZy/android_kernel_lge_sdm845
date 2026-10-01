@@ -4,9 +4,13 @@
 #define _LINUX_BTF_H
 
 #include <linux/types.h>
+#include <linux/err.h>
+#include <linux/init.h>
 #include <uapi/linux/btf.h>
 
 struct btf;
+struct file;
+union bpf_attr;
 
 #ifdef CONFIG_BPF_JIT
 #define BPF_MAX_ID	100000

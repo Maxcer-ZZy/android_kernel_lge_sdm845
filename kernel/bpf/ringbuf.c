@@ -8,6 +8,10 @@
 #include <linux/ring_buffer.h>
 #include <linux/wait.h>
 #include <linux/slab.h>
+#include <linux/log2.h>
+#include <linux/string.h>
+#include <linux/kernel.h>
+#include <asm/page.h>
 
 #define RINGBUF_MAX_RECORD_SIZE	(1U << 28)
 
@@ -19,11 +23,6 @@ struct bpf_ringbuf_ring {
 	void *tail;
 	u32 pages;
 	u32 size;
-};
-
-struct bpf_ringbuf_record {
-	u32 len;
-	u32 pad;
 };
 
 static struct bpf_map *ringbuf_map_alloc(union bpf_attr *attr)
@@ -65,6 +64,7 @@ static struct bpf_map *ringbuf_map_alloc(union bpf_attr *attr)
 	map->max_entries = rb->size;
 	map->key_size = 0;
 	map->value_size = sizeof(void *);
+	map->map_priv = rb;
 
 	return map;
 }

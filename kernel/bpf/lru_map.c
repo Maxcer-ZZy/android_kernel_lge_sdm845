@@ -7,16 +7,13 @@
 #include <linux/slab.h>
 #include <linux/list.h>
 #include <linux/spinlock.h>
+#include <linux/kernel.h>
+#include <linux/string.h>
 
 #define LRU_HASH_SIZE		65536
 #define LRU_MAX_ENTRIES		(1 << 20)
 #define LRU_NODE_SIZE		ALIGN(sizeof(struct bpf_lru_node), 8)
 #define LRU_ELEMENT_SIZE	ALIGN(sizeof(struct lru_hash_elem), 8)
-
-struct bpf_lru_node {
-	struct list_head list;
-	u32 hash;
-};
 
 struct lru_hash_elem {
 	struct hlist_node hnode;

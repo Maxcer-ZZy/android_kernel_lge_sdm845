@@ -14,6 +14,9 @@
 #include <linux/rwsem.h>
 #include <linux/idr.h>
 #include <linux/capability.h>
+#include <linux/mm.h>
+#include <linux/vmalloc.h>
+#include <linux/kernel.h>
 
 static DEFINE_MUTEX(btf_mutex);
 static DEFINE_IDR(btf_idr);
@@ -44,7 +47,7 @@ struct btf *btf_alloc(u32 data_size, u32 data_len, u32 str_size, u32 str_len)
 	if (!btf)
 		return ERR_PTR(-ENOMEM);
 
-	btf->data = kvmalloc(data_len, GFP_KERNEL);
+	btf->data = vmalloc(data_len);
 	if (!btf->data) {
 		kfree(btf);
 		return ERR_PTR(-ENOMEM);
@@ -159,7 +162,7 @@ static int btf_load(void __user *btf_data, u32 btf_data_size)
 	if (hdr.version != BTF_VERSION)
 		return -EINVAL;
 
-	data = kvmalloc(btf_data_size, GFP_KERNEL);
+	data = vmalloc(btf_data_size);
 	if (!data)
 		return -ENOMEM;
 
@@ -213,7 +216,7 @@ int bpf_btf_load(union bpf_attr *attr)
 		return -EPERM;
 
 	ubuf = u64_to_user_ptr(attr->btf);
-	if (!access_ok(ubuf, attr->btf_size))
+	if (!access_ok(VERIFY_READ, ubuf, attr->btf_size))
 		return -EFAULT;
 
 	return btf_load(ubuf, attr->btf_size);
@@ -221,23 +224,7 @@ int bpf_btf_load(union bpf_attr *attr)
 
 int bpf_btf_get_fd_by_id(union bpf_attr *attr)
 {
-	struct btf *btf;
-	int fd;
-
-	btf = btf_get(attr->btf.id);
-	if (!btf)
-		return -ENOENT;
-
-	fd = get_unused_fd_flags(O_CLOEXEC);
-	if (fd < 0) {
-		btf_put(btf);
-		return fd;
-	}
-
-	fd_install(fd, btf->data_file);
-	btf_put(btf);
-
-	return fd;
+	return -EOPNOTSUPP;
 }
 
 struct btf *btf_get_by_fd(u32 fd)
